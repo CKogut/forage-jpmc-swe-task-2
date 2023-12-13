@@ -6,13 +6,16 @@ import './App.css';
 /**
  * State declaration for <App />
  */
+/** Added showGraph:boolean - ck */
 interface IState {
   data: ServerRespond[],
+  showGraph: boolean,
 }
 
 /**
  * The parent element of the react app.
  * It renders title, button and Graph react element.
+ * Added showGraph: false - ck
  */
 class App extends Component<{}, IState> {
   constructor(props: {}) {
@@ -22,25 +25,38 @@ class App extends Component<{}, IState> {
       // data saves the server responds.
       // We use this state to parse data down to the child element (Graph) as element property
       data: [],
+      showGraph: false,
     };
   }
 
   /**
    * Render Graph react component with state.data parse as property data
+   * Added condition so graph doesn't render until user clicks button - ck
    */
   renderGraph() {
-    return (<Graph data={this.state.data}/>)
+    if (this.state.showGraph){
+        return (<Graph data={this.state.data}/>)
+    }
   }
 
   /**
    * Get new data from server and update the state with the new data
+   * Modified to get data continuously - ck
    */
   getDataFromServer() {
-    DataStreamer.getData((serverResponds: ServerRespond[]) => {
-      // Update the state by creating a new array of data that consists of
-      // Previous data in the state and the new data from server
-      this.setState({ data: [...this.state.data, ...serverResponds] });
-    });
+    let x = 0;
+    const interval = setInterval(() => {
+        DataStreamer.getData((serverResponds: ServerRespond[]) => {
+            this.setState({
+                data: serverResponds,
+                showGraph: true,
+            });
+        });
+        x++;
+        if (x > 1000) {
+            clearInterval(interval);
+        }
+    }, 100);
   }
 
   /**
